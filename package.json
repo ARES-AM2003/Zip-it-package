@@ -1,0 +1,52 @@
+{
+  "name": "@blueneon/zip-it",
+  "version": "1.0.1",
+  "description": "High-performance browser-based download manager with OPFS staging and ZIP streaming.",
+  "author": "Rochak Sulu",
+  "license": "MIT",
+  "type": "module",
+  "main": "./dist/zip-it.cjs",
+  "module": "./dist/zip-it.mjs",
+  "types": "./dist/zip-it.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/zip-it.mjs",
+      "require": "./dist/zip-it.cjs",
+      "types": "./dist/zip-it.d.ts"
+    }
+  },
+  "files": [
+    "dist",
+    "src",
+    "README.md"
+  ],
+  "keywords": [
+    "download-manager",
+    "opfs",
+    "file-system-access-api",
+    "zip-streaming",
+    "resumable-download",
+    "batch-download",
+    "browser",
+    "webworker"
+  ],
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "build:lib": "vite build",
+    "prepublishOnly": "npm run build"
+  },
+  "peerDependencies": {
+    "streamsaver": "^2.0.6"
+  },
+  "devDependencies": {
+    "@types/node": "^25.6.0",
+    "@types/streamsaver": "^2.0.5",
+    "typescript": "^6.0.3",
+    "vite": "^8.0.8",
+    "vite-plugin-dts": "^4.5.4"
+  },
+  "dependencies": {
+    "fflate": "^0.8.2"
+  }
+}
