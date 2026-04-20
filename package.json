@@ -1,6 +1,6 @@
 {
   "name": "@blueneon/zip-it",
-  "version": "1.0.5",
+  "version": "1.0.6",
   "description": "Browser download manager for large file batches (10 GB+). OPFS staging, pause/resume, ZIP streaming, IndexedDB resumability — zero server code.",
   "author": {
     "name": "Rochak Sulu",
