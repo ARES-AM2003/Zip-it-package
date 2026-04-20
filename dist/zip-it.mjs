@@ -269,7 +269,7 @@ var p = class {
 	resumeRead;
 	readPacer = null;
 	activeChunksInFlight = 0;
-	MAX_IN_FLIGHT = 10;
+	MAX_IN_FLIGHT = 500;
 	_endSignaled = !1;
 	constructor() {
 		this.worker = new f();
@@ -282,7 +282,7 @@ var p = class {
 				this.readPacer &&= (this.resumeRead(), null);
 			}
 		}, {
-			highWaterMark: 5 * 1024 * 1024,
+			highWaterMark: 50 * 1024 * 1024,
 			size: (e) => e.byteLength
 		}), this.worker.onmessage = (n) => {
 			let r = n.data;
@@ -312,7 +312,7 @@ var p = class {
 		let r = t.getReader();
 		try {
 			for (;;) {
-				for (this.readPacer && await this.readPacer; this.activeChunksInFlight > this.MAX_IN_FLIGHT;) await new Promise((e) => setTimeout(e, 10));
+				for (this.readPacer && await this.readPacer; this.activeChunksInFlight > this.MAX_IN_FLIGHT;) await new Promise((e) => setTimeout(e, 0));
 				let { done: e, value: t } = await r.read();
 				if (e) {
 					let e = new Uint8Array();

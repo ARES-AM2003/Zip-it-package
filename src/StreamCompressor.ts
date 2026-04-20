@@ -12,7 +12,7 @@ export class StreamCompressor {
   private resumeRead!: () => void;
   private readPacer: Promise<void> | null = null;
   private activeChunksInFlight = 0;
-  private MAX_IN_FLIGHT = 10; // strictly cap the amount of unwritten chunks floating in the Web Worker's mailbox
+  private MAX_IN_FLIGHT = 500; // allow a larger window for streaming throughput
   // Guard: only finalize the stream after zipInstance.end() has been explicitly called
   private _endSignaled = false;
 
@@ -41,7 +41,7 @@ export class StreamCompressor {
     }, {
       // Create a rigid physical buffer limit. If the user's Download speed (500MB/s)
       // heavily outpaces their disk save speed (50MB/s), this stops the stream from sucking gigabytes into RAM.
-      highWaterMark: 5 * 1024 * 1024, // max 5 MB buffer
+      highWaterMark: 50 * 1024 * 1024, // 50 MB buffer window
       size: (chunk) => chunk.byteLength
     });
 
@@ -104,7 +104,7 @@ export class StreamCompressor {
         // hundreds of thousands of microscopic chunks before fflate digests them.
         while (this.activeChunksInFlight > this.MAX_IN_FLIGHT) {
            // Yield JS execution momentarily until the worker catches up
-           await new Promise(r => setTimeout(r, 10));
+           await new Promise(r => setTimeout(r, 0));
         }
 
         const { done, value } = await reader.read();
