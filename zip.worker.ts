@@ -1,38 +1,63 @@
-import { Zip, ZipPassThrough } from 'fflate';
+import { ZipWriter } from '@zip.js/zip.js';
 
-let zipInstance: Zip | null = null;
-const activeFiles = new Map<number, ZipPassThrough>();
+let zipWriter: ZipWriter<Uint8Array> | null = null;
+const fileControllers = new Map<number, ReadableStreamDefaultController<Uint8Array>>();
+const activeAdds: Promise<any>[] = [];
 
-self.onmessage = (e: MessageEvent) => {
+self.onmessage = async (e: MessageEvent) => {
   const msg = e.data;
 
-  if (msg.type === 'init') {
-    zipInstance = new Zip((err, data, final) => {
-      if (err) {
-        self.postMessage({ type: 'error', error: err });
-      } else {
-        // Transfer the generated ZIP chunk back to the main thread securely 
-        // without copying it in memory.
-        self.postMessage({ type: 'data', chunk: data, final }, [data.buffer]);
+  try {
+    if (msg.type === 'init') {
+      const stream = new WritableStream({
+        write(chunk) {
+          // Send generated ZIP chunks back to the main thread securely 
+          // without copying them in memory.
+          self.postMessage({ type: 'data', chunk, final: false }, [chunk.buffer]);
+        }
+      });
+      // zip64: true is the key here for 15GB+ support
+      zipWriter = new ZipWriter(stream, { zip64: true });
+    } else if (msg.type === 'addFile') {
+      if (!zipWriter) return;
+
+      const stream = new ReadableStream<Uint8Array>({
+        start(controller) {
+          fileControllers.set(msg.fileId, controller);
+        }
+      });
+
+      // level: 0 ensures "store" mode (no compression), which prevents CPU spikes.
+      // Track this addition so we can await it during closure
+      const addPromise = zipWriter.add(msg.fileName, stream, { level: 0 });
+      activeAdds.push(addPromise);
+      
+      // Remove from active list when done
+      addPromise.finally(() => {
+        const index = activeAdds.indexOf(addPromise);
+        if (index > -1) activeAdds.splice(index, 1);
+      });
+    } else if (msg.type === 'chunk') {
+      const controller = fileControllers.get(msg.fileId);
+      if (controller) {
+        if (msg.final) {
+          controller.close();
+          fileControllers.delete(msg.fileId);
+        } else if (msg.chunk && msg.chunk.length > 0) {
+          controller.enqueue(msg.chunk);
+        }
       }
-    });
-  } else if (msg.type === 'addFile') {
-    if (!zipInstance) return;
-    // ZipPassThrough pushes uncompressed data streams accurately 
-    const fileZipObj = new ZipPassThrough(msg.fileName);
-    zipInstance.add(fileZipObj);
-    activeFiles.set(msg.fileId, fileZipObj);
-  } else if (msg.type === 'chunk') {
-    const fileZipObj = activeFiles.get(msg.fileId);
-    if (fileZipObj) {
-      fileZipObj.push(msg.chunk, msg.final);
-      if (msg.final) {
-        activeFiles.delete(msg.fileId);
+    } else if (msg.type === 'end') {
+      if (zipWriter) {
+        // Wait for all currently adding files to finish being pulled by zip.js
+        await Promise.all(activeAdds);
+        await zipWriter.close();
+        zipWriter = null;
+        // Signal the very end of the ZIP stream
+        self.postMessage({ type: 'data', chunk: new Uint8Array(0), final: true });
       }
     }
-  } else if (msg.type === 'end') {
-    if (zipInstance) {
-      zipInstance.end();
-    }
+  } catch (err: any) {
+    self.postMessage({ type: 'error', error: err.message || err.toString() });
   }
 };
