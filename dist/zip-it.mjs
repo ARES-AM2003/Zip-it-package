@@ -270,6 +270,7 @@ var p = class {
 	readPacer = null;
 	activeChunksInFlight = 0;
 	MAX_IN_FLIGHT = 10;
+	_endSignaled = !1;
 	constructor() {
 		this.worker = new f();
 		let e, t;
@@ -294,7 +295,7 @@ var p = class {
 				}
 				this.controller.desiredSize !== null && this.controller.desiredSize <= 0 && !this.readPacer && (this.readPacer = new Promise((e) => {
 					this.resumeRead = e;
-				})), r.final && (e(), this.worker.terminate());
+				})), r.final && this._endSignaled && (e(), this.worker.terminate());
 			} else r.type === "error" && (t(r.error), this.worker.terminate());
 		}, this.worker.postMessage({ type: "init" });
 	}
@@ -344,7 +345,7 @@ var p = class {
 		}
 	}
 	end() {
-		this.worker.postMessage({ type: "end" });
+		this._endSignaled = !0, this.worker.postMessage({ type: "end" });
 	}
 }, h = class {
 	_isBusy = !1;

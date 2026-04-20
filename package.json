@@ -1,8 +1,11 @@
 {
   "name": "@blueneon/zip-it",
-  "version": "1.0.1",
-  "description": "High-performance browser-based download manager with OPFS staging and ZIP streaming.",
-  "author": "Rochak Sulu",
+  "version": "1.0.2",
+  "description": "Browser download manager for large file batches (10 GB+). OPFS staging, pause/resume, ZIP streaming, IndexedDB resumability — zero server code.",
+  "author": {
+    "name": "Rochak Sulu",
+    "url": "https://github.com/ARES-AM2003"
+  },
   "license": "MIT",
   "type": "module",
   "main": "./dist/zip-it.cjs",
@@ -23,13 +26,36 @@
   "keywords": [
     "download-manager",
     "opfs",
+    "origin-private-file-system",
     "file-system-access-api",
     "zip-streaming",
     "resumable-download",
     "batch-download",
+    "large-file-download",
     "browser",
-    "webworker"
+    "webworker",
+    "web-worker",
+    "zip-compression",
+    "client-side-zip",
+    "fflate",
+    "streamsaver",
+    "indexeddb",
+    "pause-resume",
+    "file-download",
+    "streaming",
+    "archive"
   ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ARES-AM2003/Zip-it-package.git"
+  },
+  "homepage": "https://github.com/ARES-AM2003/Zip-it-package#readme",
+  "bugs": {
+    "url": "https://github.com/ARES-AM2003/Zip-it-package/issues"
+  },
+  "engines": {
+    "node": ">=16"
+  },
   "scripts": {
     "dev": "vite",
     "build": "vite build",
@@ -38,6 +64,11 @@
   },
   "peerDependencies": {
     "streamsaver": "^2.0.6"
+  },
+  "peerDependenciesMeta": {
+    "streamsaver": {
+      "optional": true
+    }
   },
   "devDependencies": {
     "@types/node": "^25.6.0",

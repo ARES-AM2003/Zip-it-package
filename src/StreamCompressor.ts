@@ -13,6 +13,8 @@ export class StreamCompressor {
   private readPacer: Promise<void> | null = null;
   private activeChunksInFlight = 0;
   private MAX_IN_FLIGHT = 10; // strictly cap the amount of unwritten chunks floating in the Web Worker's mailbox
+  // Guard: only finalize the stream after zipInstance.end() has been explicitly called
+  private _endSignaled = false;
 
   constructor() {
     this.worker = new ZipWorker();
@@ -64,7 +66,11 @@ export class StreamCompressor {
             });
         }
 
-        if (msg.final) {
+        // Only close the stream when fflate signals the final flush AND
+        // we have explicitly called zipInstance.end() (i.e., all files are done).
+        // Without the _endSignaled guard, fflate can emit final:true mid-archive
+        // on large ZIPs, prematurely killing the worker and corrupting the output.
+        if (msg.final && this._endSignaled) {
           finalizeStream();
           this.worker.terminate();
         }
@@ -125,6 +131,7 @@ export class StreamCompressor {
   }
 
   public end() {
+    this._endSignaled = true;
     this.worker.postMessage({ type: 'end' });
   }
 }
