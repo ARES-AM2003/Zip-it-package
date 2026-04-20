@@ -45,6 +45,9 @@ self.onmessage = async (e: MessageEvent) => {
           fileControllers.delete(msg.fileId);
         } else if (msg.chunk && msg.chunk.length > 0) {
           controller.enqueue(msg.chunk);
+          // Signal the main thread that the chunk has been digested, 
+          // allowing the backpressure logic to feed more data.
+          self.postMessage({ type: 'ack', fileId: msg.fileId });
         }
       }
     } else if (msg.type === 'end') {

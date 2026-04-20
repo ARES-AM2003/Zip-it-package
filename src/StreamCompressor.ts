@@ -48,8 +48,6 @@ export class StreamCompressor {
     this.worker.onmessage = (e: MessageEvent) => {
       const msg = e.data;
       if (msg.type === 'data') {
-        this.activeChunksInFlight = Math.max(0, this.activeChunksInFlight - 1);
-
         try {
           this.controller.enqueue(msg.chunk);
         } catch(err) {
@@ -74,6 +72,9 @@ export class StreamCompressor {
           finalizeStream();
           this.worker.terminate();
         }
+      } else if (msg.type === 'ack') {
+        // Specifically decrement when the worker explicitly acknowledges consumption
+        this.activeChunksInFlight = Math.max(0, this.activeChunksInFlight - 1);
       } else if (msg.type === 'error') {
         errorStream(msg.error);
         this.worker.terminate();
