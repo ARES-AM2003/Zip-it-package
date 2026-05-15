@@ -67,6 +67,15 @@ export interface ProgressStats {
   etaSeconds: number | null;
   /** Map of fileId → FileEntry for all tracked files. */
   files: Map<string, FileEntry>;
+  /**
+   * ZIP generation progress (only populated during ds.zip()).
+   */
+  zipProgress?: {
+    totalFiles: number;
+    currentFileIndex: number;
+    currentFileName: string;
+    isFinished: boolean;
+  };
 }
 
 // ─── Event handlers ────────────────────────────────────────────────────────────
@@ -125,6 +134,11 @@ export interface ZipItOptions {
    * Called when an individual file's state changes.
    */
   onFileProgress?: FileProgressHandler;
+  /**
+   * If true, automatically attempts to resume the previous session from IndexedDB on creation.
+   * @default false
+   */
+  autoHydrate?: boolean;
 }
 
 /** Options for adding an individual file to the queue. */

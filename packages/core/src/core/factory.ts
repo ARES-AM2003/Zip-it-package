@@ -44,6 +44,7 @@ const DEFAULT_OPTIONS: Required<ZipItOptions> = {
   onComplete: undefined as unknown as CompleteHandler,
   onError: undefined as unknown as ErrorHandler,
   onFileProgress: undefined as unknown as FileProgressHandler,
+  autoHydrate: false,
 };
 
 /**
@@ -70,6 +71,11 @@ export function createZipIt(options: ZipItOptions = {}): ZipItInstance {
   if (resolved.onComplete) engine.on('complete', resolved.onComplete);
   if (resolved.onError) engine.on('error', resolved.onError);
   if (resolved.onFileProgress) engine.on('file-progress', resolved.onFileProgress);
+
+  // Handle autoHydrate
+  if (resolved.autoHydrate) {
+    void engine.hydrate().catch(console.error);
+  }
 
   // ─── Helper ───────────────────────────────────────────────────────────────
 
@@ -124,7 +130,32 @@ export function createZipIt(options: ZipItOptions = {}): ZipItInstance {
         fileName: f.folder ? `${f.folder}/${f.filename}` : f.filename,
         opfsId: f.status === 'staged' ? f.id : undefined,
       }));
-      await zipEngine.streamArchive(outputFilename, requests);
+
+      await zipEngine.streamArchive(
+        outputFilename,
+        requests,
+        (zipProgress) => {
+          engine.setZipProgress(zipProgress);
+        },
+        (error, fileName) => {
+          // Find the file that failed if possible, or create a mock entry
+          const file = files.find((f) => f.filename === fileName) || {
+            id: 'zip-error',
+            url: '',
+            filename: fileName,
+            status: 'error',
+            totalBytes: 0,
+            downloadedBytes: 0,
+            addedAt: Date.now(),
+          } as FileEntry;
+          
+          // @ts-ignore - trigger private event system for now or expose a proper way
+          engine.listeners.error.forEach((h: ErrorHandler) => h(error, file));
+        }
+      );
+
+      // Clear zip progress when done
+      engine.setZipProgress(undefined);
     },
 
     async saveToFolder() {

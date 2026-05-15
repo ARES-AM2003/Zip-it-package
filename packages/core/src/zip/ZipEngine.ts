@@ -85,7 +85,14 @@ export class ZipEngine {
    */
   async streamArchive(
     archiveName: string,
-    requests: ZipRequest[]
+    requests: ZipRequest[],
+    onProgress?: (stats: {
+      currentFileIndex: number;
+      totalFiles: number;
+      currentFileName: string;
+      isFinished: boolean;
+    }) => void,
+    onError?: (error: Error, fileName: string) => void
   ): Promise<void> {
     if (this._isBusy) {
       throw new Error(
@@ -105,14 +112,26 @@ export class ZipEngine {
     // Trigger the OS download FIRST so the browser shows progress immediately
     const downloadPromise = triggerStreamDownload(archiveName, zipStream).catch(
       (err: unknown) => {
-        console.error('[ZipIt] Stream download failed:', err);
+        const e = err as Error;
+        console.error('[ZipIt] Stream download failed:', e);
+        if (onError) onError(e, archiveName);
       }
     );
 
     try {
       const rootDir = supportsOPFS() ? await navigator.storage.getDirectory() : null;
 
-      for (const req of requests) {
+      for (let i = 0; i < requests.length; i++) {
+        const req = requests[i];
+        if (onProgress) {
+          onProgress({
+            currentFileIndex: i + 1,
+            totalFiles: requests.length,
+            currentFileName: req.fileName,
+            isFinished: false,
+          });
+        }
+
         let stream: ReadableStream<Uint8Array> | null = null;
 
         // Prefer OPFS if the file was already staged
@@ -128,20 +147,32 @@ export class ZipEngine {
 
         // Network fetch as fallback (or primary for on-the-fly zip)
         if (!stream) {
-          const response = await fetch(req.url);
-          if (!response.ok || !response.body) {
-            console.warn(
-              `[ZipIt] Failed to fetch ${req.url} (HTTP ${response.status}). Skipping.`
-            );
+          try {
+            const response = await fetch(req.url);
+            if (!response.ok || !response.body) {
+              throw new Error(`HTTP ${response.status}`);
+            }
+            stream = response.body;
+          } catch (err: unknown) {
+            const e = err as Error;
+            console.warn(`[ZipIt] Failed to fetch ${req.url}: ${e.message}. Skipping.`);
+            if (onError) onError(e, req.fileName);
             continue;
           }
-          stream = response.body;
         }
 
         await compressor.addFileStream(req.fileName, stream);
       }
 
       compressor.end();
+      if (onProgress) {
+        onProgress({
+          currentFileIndex: requests.length,
+          totalFiles: requests.length,
+          currentFileName: '',
+          isFinished: true,
+        });
+      }
       await downloadPromise;
     } finally {
       this._isBusy = false;

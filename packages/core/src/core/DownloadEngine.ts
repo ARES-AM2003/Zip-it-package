@@ -25,6 +25,7 @@ type EventMap = {
   complete: CompleteHandler[];
   error: ErrorHandler[];
   'file-progress': FileProgressHandler[];
+  'zip-progress': ((stats: Required<ProgressStats>['zipProgress']) => void)[];
 };
 
 export class DownloadEngine {
@@ -41,7 +42,10 @@ export class DownloadEngine {
     complete: [],
     error: [],
     'file-progress': [],
+    'zip-progress': [],
   };
+
+  private zipProgress?: ProgressStats['zipProgress'];
 
   // Speed tracking (rolling 3s window)
   private speedSamples: { time: number; bytes: number }[] = [];
@@ -153,6 +157,14 @@ export class DownloadEngine {
 
   getProgress(): ProgressStats {
     return this.buildStats();
+  }
+
+  setZipProgress(progress?: ProgressStats['zipProgress']): void {
+    this.zipProgress = progress;
+    if (progress) {
+      this.listeners['zip-progress'].forEach((h) => h(progress));
+    }
+    this.emitProgress();
   }
 
   async hydrate(): Promise<FileEntry[]> {
@@ -362,6 +374,7 @@ export class DownloadEngine {
       speedBytesPerSecond,
       etaSeconds,
       files: new Map(this.files),
+      zipProgress: this.zipProgress,
     };
   }
 }

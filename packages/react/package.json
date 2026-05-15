@@ -26,13 +26,13 @@
     "typecheck": "tsc --noEmit"
   },
   "peerDependencies": {
-    "@khatiwadaprashant/zipit-core": "0.1.1",
+    "@khatiwadaprashant/zipit-core": "workspace:*",
     "fflate": "^0.8.0",
     "react": ">=16.8.0"
   },
   "devDependencies": {
     "@types/react": "^18.0.0",
-    "@khatiwadaprashant/zipit-core": "0.1.1",
+    "@khatiwadaprashant/zipit-core": "workspace:*",
     "react": "^18.0.0",
     "vite": "^5.0.0",
     "vite-plugin-dts": "^3.8.0",
