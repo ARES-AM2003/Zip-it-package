@@ -19,9 +19,8 @@
   "type": "module",
   "exports": {
     ".": {
-      "import": "./dist/index.js",
-      "require": "./dist/index.cjs",
-      "types": "./dist/index.d.ts"
+      "import": "./src/index.ts",
+      "types": "./src/index.ts"
     },
     "./worker": {
       "import": "./dist/workers/download.worker.js",

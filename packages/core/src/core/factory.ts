@@ -192,7 +192,7 @@ export function createZipIt(options: ZipItOptions = {}): ZipItInstance {
     },
 
     isBusy() {
-      return engine.isBusy();
+      return engine.isBusy() || zipEngine.isBusy;
     },
 
     async reset() {

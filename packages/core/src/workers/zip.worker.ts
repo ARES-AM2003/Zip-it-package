@@ -47,9 +47,15 @@ self.onmessage = (event: MessageEvent<WorkerMessage>) => {
     }
 
     case 'addFile': {
-      const fileStream = new ZipPassThrough(msg.fileName);
-      fileStreams.set(msg.fileId, fileStream);
-      zip.add(fileStream);
+      console.log('[ZipWorker] Adding file:', msg.fileName, 'ID:', msg.fileId);
+      try {
+        const fileStream = new ZipPassThrough(msg.fileName);
+        fileStreams.set(msg.fileId, fileStream);
+        zip.add(fileStream);
+      } catch (err: any) {
+        console.error('[ZipWorker] Error adding file:', msg.fileName, err);
+        self.postMessage({ type: 'error', error: `Failed to add ${msg.fileName}: ${err.message}` });
+      }
       break;
     }
 

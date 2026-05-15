@@ -104,6 +104,7 @@ export class StreamCompressor {
     fileName: string,
     stream: ReadableStream<Uint8Array>
   ): Promise<void> {
+    console.log('[StreamCompressor] Starting file stream:', fileName);
     const fileId = this.nextFileId++;
     this.worker.postMessage({ type: 'addFile', fileId, fileName });
 

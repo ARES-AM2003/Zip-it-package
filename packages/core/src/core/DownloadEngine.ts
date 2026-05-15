@@ -160,6 +160,7 @@ export class DownloadEngine {
   }
 
   setZipProgress(progress?: ProgressStats['zipProgress']): void {
+    console.log('[ZipIt] DownloadEngine received zip progress:', progress?.currentFileIndex, '/', progress?.totalFiles);
     this.zipProgress = progress;
     if (progress) {
       this.listeners['zip-progress'].forEach((h) => h(progress));

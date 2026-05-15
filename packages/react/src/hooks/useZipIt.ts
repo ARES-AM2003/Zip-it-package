@@ -112,11 +112,13 @@ export function useZipIt(options: UseZipItOptions = {}): UseZipItReturn {
 
   useEffect(() => {
     const unsubProgress = instance.on('progress', (stats: ProgressStats) => {
+      console.log('[ZipIt Hook] Received Progress Event:', stats.overallProgress, 'ZipProgress:', stats.zipProgress ? 'active' : 'none');
       setProgress(stats);
       setIsBusy(instance.isBusy());
     });
 
     const unsubComplete = instance.on('complete', (stats: ProgressStats) => {
+      console.log('[ZipIt Hook] Received Complete Event');
       setProgress(stats);
       setIsBusy(false);
     });

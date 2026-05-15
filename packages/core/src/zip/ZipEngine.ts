@@ -102,6 +102,7 @@ export class ZipEngine {
     }
 
     this._isBusy = true;
+    console.log('[ZipIt] ZipEngine starting archive:', archiveName);
 
     const compressor = new StreamCompressor({
       maxInFlight: this.options.maxInFlight,
@@ -110,17 +111,21 @@ export class ZipEngine {
     const zipStream = compressor.getStream();
 
     // Trigger the OS download FIRST so the browser shows progress immediately
+    let isAborted = false;
     const downloadPromise = triggerStreamDownload(archiveName, zipStream).catch(
       (err: unknown) => {
         const e = err as Error;
-        console.error('[ZipIt] Stream download failed:', e);
+        isAborted = true;
+        console.error('[ZipIt] Stream download failed or cancelled:', e);
         if (onError) onError(e, archiveName);
+        throw e; // Propagate to caller
       }
     );
 
     try {
       const rootDir = supportsOPFS() ? await navigator.storage.getDirectory() : null;
 
+      const usedNames = new Set<string>();
       for (let i = 0; i < requests.length; i++) {
         const req = requests[i];
         if (onProgress) {
@@ -148,6 +153,7 @@ export class ZipEngine {
         // Network fetch as fallback (or primary for on-the-fly zip)
         if (!stream) {
           try {
+            console.log(`[ZipIt] Processing file ${i + 1}/${requests.length}: ${req.fileName}`);
             const response = await fetch(req.url);
             if (!response.ok || !response.body) {
               throw new Error(`HTTP ${response.status}`);
@@ -161,11 +167,29 @@ export class ZipEngine {
           }
         }
 
-        await compressor.addFileStream(req.fileName, stream);
+        if (isAborted) {
+          console.warn('[ZipIt] Zipping loop aborted because download stream closed.');
+          break;
+        }
+
+        // Duplicate name prevention
+        let finalName = req.fileName;
+        let counter = 1;
+        while (usedNames.has(finalName)) {
+          const extIndex = req.fileName.lastIndexOf(".");
+          const base =
+            extIndex > -1 ? req.fileName.slice(0, extIndex) : req.fileName;
+          const ext = extIndex > -1 ? req.fileName.slice(extIndex) : "";
+          finalName = `${base} (${counter++})${ext}`;
+        }
+        usedNames.add(finalName);
+
+        await compressor.addFileStream(finalName, stream);
       }
 
       compressor.end();
       if (onProgress) {
+        console.log('[ZipIt] Zipping loop finished, reporting 100%');
         onProgress({
           currentFileIndex: requests.length,
           totalFiles: requests.length,
@@ -176,6 +200,7 @@ export class ZipEngine {
       await downloadPromise;
     } finally {
       this._isBusy = false;
+      console.log('[ZipIt] ZipEngine finished archive:', archiveName);
     }
   }
 }
