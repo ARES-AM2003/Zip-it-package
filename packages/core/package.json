@@ -1,6 +1,6 @@
 {
   "name": "@blueneon/zip-it",
-  "version": "0.1.1",
+  "version": "2.0.0",
   "description": "High-performance client-side ZIP streaming and resumable batch download engine",
   "license": "MIT",
   "author": "Prashant Khatiwada",
@@ -65,7 +65,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/Prashant8Khatiwada/zipit"
+    "url": "https://github.com/ARES-AM2003/Zip-it-package"
   },
   "homepage": "https://zipit.dev"
 }
