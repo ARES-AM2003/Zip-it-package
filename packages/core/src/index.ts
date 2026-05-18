@@ -1,9 +1,9 @@
 /**
- * @khatiwadaprashant/zipit-core — Public API surface
+ * @blueneon/zip-it — Public API surface
  *
  * Tree-shakeable exports. Import only what you need:
- *   import { createZipIt } from '@khatiwadaprashant/zipit-core'
- *   import type { ZipItOptions } from '@khatiwadaprashant/zipit-core'
+ *   import { createZipIt } from '@blueneon/zip-it'
+ *   import type { ZipItOptions } from '@blueneon/zip-it'
  */
 
 // ─── Factory function (primary API) ─────────────────────────────────────────

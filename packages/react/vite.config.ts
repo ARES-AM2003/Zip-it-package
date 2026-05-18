@@ -12,9 +12,9 @@ export default defineConfig({
       fileName: (format) => `index.${format === 'es' ? 'js' : 'cjs'}`,
     },
     rollupOptions: {
-      external: ['react', 'react/jsx-runtime', '@khatiwadaprashant/zipit-core'],
+      external: ['react', 'react/jsx-runtime', '@blueneon/zip-it'],
       output: {
-        globals: { react: 'React', '@khatiwadaprashant/zipit-core': 'ZipItCore' },
+        globals: { react: 'React', '@blueneon/zip-it': 'ZipItCore' },
       },
     },
     target: 'ES2022',

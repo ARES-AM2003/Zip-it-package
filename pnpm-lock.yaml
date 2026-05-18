@@ -20,7 +20,7 @@ importers:
 
   apps/web:
     dependencies:
-      '@khatiwadaprashant/zipit-core':
+      '@blueneon/zip-it':
         specifier: workspace:*
         version: link:../../packages/core
       fflate:
@@ -76,7 +76,7 @@ importers:
         specifier: ^0.8.0
         version: 0.8.2
     devDependencies:
-      '@khatiwadaprashant/zipit-core':
+      '@blueneon/zip-it':
         specifier: workspace:*
         version: link:../core
       '@testing-library/react':

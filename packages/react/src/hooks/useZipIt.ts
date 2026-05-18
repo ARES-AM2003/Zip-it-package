@@ -1,7 +1,7 @@
 /**
  * useZipIt — primary React hook for batch downloading.
  *
- * Wraps `createZipIt` from `@khatiwadaprashant/zipit-core` and bridges it
+ * Wraps `createZipIt` from `@blueneon/zip-it` and bridges it
  * into React's state model with stable callbacks.
  *
  * @example
@@ -33,7 +33,7 @@ import {
   type ProgressStats,
   type FileEntry,
   type AddFileOptions,
-} from '@khatiwadaprashant/zipit-core';
+} from '@blueneon/zip-it';
 
 export type UseZipItOptions = ZipItOptions;
 

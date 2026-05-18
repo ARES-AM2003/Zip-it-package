@@ -9,7 +9,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@khatiwadaprashant/zipit-core": "workspace:*",
+    "@blueneon/zip-it": "workspace:*",
     "fflate": "^0.8.2",
     "streamsaver": "^2.0.6"
   },

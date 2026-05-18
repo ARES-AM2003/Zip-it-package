@@ -20,8 +20,8 @@
  */
 
 import { useCallback, useState } from 'react';
-import { createZipIt } from '@khatiwadaprashant/zipit-core';
-import type { ProgressStats } from '@khatiwadaprashant/zipit-core';
+import { createZipIt } from '@blueneon/zip-it';
+import type { ProgressStats } from '@blueneon/zip-it';
 
 export interface UseZipReturn {
   /**

@@ -1,5 +1,5 @@
 /**
- * Full TypeScript type surface for @khatiwadaprashant/zipit-core
+ * Full TypeScript type surface for @blueneon/zip-it
  * All public-facing types are exported from this module.
  */
 

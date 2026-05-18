@@ -1,5 +1,5 @@
 {
-  "name": "@khatiwadaprashant/zipit-core",
+  "name": "@blueneon/zip-it",
   "version": "0.1.1",
   "description": "High-performance client-side ZIP streaming and resumable batch download engine",
   "license": "MIT",
