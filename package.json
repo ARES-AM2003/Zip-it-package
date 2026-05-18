@@ -1,6 +1,6 @@
 {
   "name": "zipit-monorepo",
-  "version": "0.0.0",
+  "version": "2.0.0",
   "private": true,
   "description": "ZipIt — Client-side ZIP streaming & batch download library",
   "scripts": {
