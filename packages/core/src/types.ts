@@ -139,6 +139,21 @@ export interface ZipItOptions {
    * @default false
    */
   autoHydrate?: boolean;
+  /**
+   * Maximum number of automatic retries on network/timeout failures before marking a download as failed.
+   * @default 3
+   */
+  maxRetries?: number;
+  /**
+   * Automatically update the browser tab title with the downloading progress percentage.
+   * @default true
+   */
+  trackTabTitleProgress?: boolean;
+  /**
+   * Register a window beforeunload restriction to prevent closing the tab during active downloads.
+   * @default true
+   */
+  preventUnload?: boolean;
 }
 
 /** Options for adding an individual file to the queue. */

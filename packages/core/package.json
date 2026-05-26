@@ -1,6 +1,6 @@
 {
-  "name": "@khatiwadaprashant/zipit-core",
-  "version": "0.1.1",
+  "name": "@blueneon/zip-it",
+  "version": "2.0.0",
   "description": "High-performance client-side ZIP streaming and resumable batch download engine",
   "license": "MIT",
   "author": "Prashant Khatiwada",
@@ -19,8 +19,9 @@
   "type": "module",
   "exports": {
     ".": {
-      "import": "./src/index.ts",
-      "types": "./src/index.ts"
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs",
+      "types": "./dist/index.d.ts"
     },
     "./worker": {
       "import": "./dist/workers/download.worker.js",

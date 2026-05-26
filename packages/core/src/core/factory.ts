@@ -45,6 +45,9 @@ const DEFAULT_OPTIONS: Required<ZipItOptions> = {
   onError: undefined as unknown as ErrorHandler,
   onFileProgress: undefined as unknown as FileProgressHandler,
   autoHydrate: false,
+  maxRetries: 3,
+  trackTabTitleProgress: true,
+  preventUnload: true,
 };
 
 /**
@@ -57,6 +60,7 @@ const DEFAULT_OPTIONS: Required<ZipItOptions> = {
  * const ds = createZipIt({ concurrency: 4, onProgress: console.log });
  */
 export function createZipIt(options: ZipItOptions = {}): ZipItInstance {
+  console.log('[ZipIt] (LOCAL OPTIMIZED BUILD) Initializing ZipIt manager...');
   const resolved: Required<ZipItOptions> = { ...DEFAULT_OPTIONS, ...options };
 
   const store = new StateStore(resolved.dbName);

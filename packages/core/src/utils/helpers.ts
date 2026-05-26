@@ -73,16 +73,36 @@ export function formatEta(seconds: number): string {
   return `${h}h ${m}m`;
 }
 
-/**
- * Returns a throttled version of a function that runs at most once per rAF.
- */
 export function rafThrottle<T extends (...args: unknown[]) => void>(fn: T): T {
   let rafId: number | null = null;
+  let timeoutId: any = null;
+  let lastArgs: unknown[] | null = null;
+
   return ((...args: unknown[]) => {
+    lastArgs = args;
+    const isHidden = typeof document !== 'undefined' && document.hidden;
+
+    if (isHidden) {
+      if (timeoutId !== null) return;
+      timeoutId = setTimeout(() => {
+        timeoutId = null;
+        if (rafId !== null) {
+          cancelAnimationFrame(rafId);
+          rafId = null;
+        }
+        fn(...(lastArgs || []));
+      }, 250);
+      return;
+    }
+
     if (rafId !== null) return;
     rafId = requestAnimationFrame(() => {
       rafId = null;
-      fn(...args);
+      if (timeoutId !== null) {
+        clearTimeout(timeoutId);
+        timeoutId = null;
+      }
+      fn(...(lastArgs || []));
     });
   }) as T;
 }
