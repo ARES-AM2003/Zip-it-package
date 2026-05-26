@@ -5,14 +5,14 @@
   "description": "ZipIt — Client-side ZIP streaming & batch download library",
   "scripts": {
     "dev": "yarn --cwd apps/web run dev",
-    "dev:docs": "pnpm --filter @khatiwadaprashant/zipit-docs dev",
-    "build": "pnpm -r --filter '@blueneon/zip-it' --filter '@khatiwadaprashant/zipit-react' build",
+    "dev:docs": "pnpm --filter @blueneon/zipit-docs dev",
+    "build": "pnpm -r --filter '@blueneon/zip-it' --filter '@blueneon/zipit-react' build",
     "build:all": "pnpm -r build",
     "test": "pnpm -r test",
     "test:coverage": "pnpm -r test:coverage",
     "lint": "pnpm -r lint",
     "typecheck": "pnpm -r typecheck",
-    "release": "pnpm -r --filter '@blueneon/zip-it' --filter '@khatiwadaprashant/zipit-react' publish --access public"
+    "release": "pnpm -r --filter '@blueneon/zip-it' --filter '@blueneon/zipit-react' publish --access public"
   },
   "devDependencies": {
     "typescript": "^5.4.0",

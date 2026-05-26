@@ -1,9 +1,9 @@
 {
-  "name": "@khatiwadaprashant/zipit-react",
+  "name": "@blueneon/zipit-react",
   "version": "0.1.1",
   "description": "React hooks for @blueneon/zip-it — useZipIt, useZip",
   "license": "MIT",
-  "author": "Rochak Sulu",
+  "author": "Blueneon",
   "keywords": ["zipit", "react", "hooks", "download", "zip", "streaming"],
   "sideEffects": false,
   "type": "module",
