@@ -19,6 +19,8 @@ import type {
 import { StateStore } from '../store/StateStore';
 import { rafThrottle } from '../utils/helpers';
 import type { WorkerInMessage, WorkerOutMessage } from '../workers/download.worker';
+// @ts-expect-error - Vite virtual worker import
+import DownloadWorker from '../workers/download.worker?worker&inline';
 
 type EventMap = {
   progress: ProgressHandler[];
@@ -37,6 +39,11 @@ export class DownloadEngine {
   private directoryHandle: FileSystemDirectoryHandle | null = null;
   private concurrency: number;
   private _isPaused = false;
+  private maxRetries: number;
+  private trackTabTitleProgress: boolean;
+  private preventUnload: boolean;
+  private originalTitle: string = '';
+  private retryCounts = new Map<string, number>();
   private listeners: EventMap = {
     progress: [],
     complete: [],
@@ -55,11 +62,47 @@ export class DownloadEngine {
   constructor(options: Required<ZipItOptions>, store: StateStore) {
     this.store = store;
     this.concurrency = options.concurrency;
+    this.maxRetries = options.maxRetries ?? 3;
+    this.trackTabTitleProgress = options.trackTabTitleProgress ?? true;
+    this.preventUnload = options.preventUnload ?? true;
+
+    if (typeof document !== 'undefined') {
+      this.originalTitle = document.title;
+    }
+
+    if (typeof window !== 'undefined') {
+      window.addEventListener('beforeunload', (e) => {
+        if (this.preventUnload && this.isBusy() && !this._isPaused) {
+          e.preventDefault();
+          e.returnValue = ''; // Required for Chrome
+          return '';
+        }
+      });
+    }
 
     // Throttle progress reporting to animation frames
     this.emitProgress = rafThrottle(() => {
       const stats = this.buildStats();
       this.listeners.progress.forEach((h) => h(stats));
+
+      if (this.trackTabTitleProgress && typeof document !== 'undefined') {
+        if (this.isBusy() && !this._isPaused) {
+          let progress = stats.overallProgress;
+          if (this.zipProgress && !this.zipProgress.isFinished) {
+            const { totalFiles, currentFileIndex } = this.zipProgress;
+            progress = totalFiles > 0 ? (currentFileIndex / totalFiles) : 0;
+          }
+          const percentage = Math.round(progress * 100);
+          const baseTitle = this.originalTitle || document.title.replace(/^\(\d+%\)\s*/, '');
+          document.title = `(${percentage}%) ${baseTitle}`;
+        } else {
+          if (this.originalTitle) {
+            document.title = this.originalTitle;
+          } else {
+            document.title = document.title.replace(/^\(\d+%\)\s*/, '');
+          }
+        }
+      }
 
       if (stats.completedFiles === stats.totalFiles && stats.totalFiles > 0) {
         this.listeners.complete.forEach((h) => h(stats));
@@ -148,7 +191,14 @@ export class DownloadEngine {
   isPaused(): boolean { return this._isPaused; }
 
   isBusy(): boolean {
-    return this.activeWorkers.size > 0 || this.queue.length > 0 || this.activeTransfers.size > 0;
+    const allFiles = Array.from(this.files.values());
+    const isDownloading = allFiles.some((f) => 
+      f.status === 'downloading' || 
+      f.status === 'queued' || 
+      f.status === 'transferring'
+    );
+    const isZipping = this.zipProgress && !this.zipProgress.isFinished;
+    return isDownloading || !!isZipping;
   }
 
   getFiles(): Map<string, FileEntry> {
@@ -234,10 +284,7 @@ export class DownloadEngine {
   }
 
   private startWorker(entry: FileEntry): void {
-    const worker = new Worker(
-      new URL('../workers/download.worker.ts', import.meta.url),
-      { type: 'module' }
-    );
+    const worker = new DownloadWorker();
     this.activeWorkers.set(entry.id, worker);
     this.updateFile(entry.id, { status: 'downloading' });
 
@@ -259,6 +306,7 @@ export class DownloadEngine {
         case 'completed':
           this.activeWorkers.delete(entry.id);
           worker.terminate();
+          this.retryCounts.delete(entry.id); // Reset retries on success
           this.updateFile(entry.id, { status: 'staged' });
           if (this.directoryHandle) {
             void this.transferToLocalDisk(this.files.get(entry.id)!);
@@ -270,9 +318,24 @@ export class DownloadEngine {
           const fileError = new Error(msg.error);
           this.activeWorkers.delete(entry.id);
           worker.terminate();
-          this.updateFile(entry.id, { status: 'error', errorMessage: msg.error });
-          this.listeners.error.forEach((h) => h(fileError, this.files.get(entry.id)!));
-          this.processQueue();
+
+          const currentRetries = this.retryCounts.get(entry.id) || 0;
+          if (currentRetries < this.maxRetries) {
+            this.retryCounts.set(entry.id, currentRetries + 1);
+            console.warn(`[ZipIt] Retrying download for ${entry.filename} (${currentRetries + 1}/${this.maxRetries}) due to error: ${msg.error}`);
+            this.updateFile(entry.id, { status: 'queued', errorMessage: `Retrying (${currentRetries + 1}/${this.maxRetries})...` });
+
+            setTimeout(() => {
+              if (this._isPaused) return;
+              if (this.queue.includes(entry.id)) return;
+              this.queue.push(entry.id);
+              this.processQueue();
+            }, 2000);
+          } else {
+            this.updateFile(entry.id, { status: 'error', errorMessage: msg.error });
+            this.listeners.error.forEach((h) => h(fileError, this.files.get(entry.id)!));
+            this.processQueue();
+          }
           break;
         }
 

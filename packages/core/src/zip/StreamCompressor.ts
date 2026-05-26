@@ -8,6 +8,9 @@
  * @internal
  */
 
+// @ts-expect-error - Vite virtual worker import
+import ZipWorker from '../workers/zip.worker?worker&inline';
+
 export class StreamCompressor {
   private worker: Worker;
   private readable: ReadableStream<Uint8Array>;
@@ -27,10 +30,7 @@ export class StreamCompressor {
     this.MAX_IN_FLIGHT = options.maxInFlight ?? 10;
     this.STREAM_BUFFER_BYTES = options.streamBufferBytes ?? 5 * 1024 * 1024;
 
-    this.worker = new Worker(
-      new URL('../workers/zip.worker.ts', import.meta.url),
-      { type: 'module' }
-    );
+    this.worker = new ZipWorker();
 
     let streamFinalize!: () => void;
     let streamError!: (err: unknown) => void;

@@ -102,7 +102,7 @@ export class ZipEngine {
     }
 
     this._isBusy = true;
-    console.log('[ZipIt] ZipEngine starting archive:', archiveName);
+    console.log('[ZipIt] (LOCAL OPTIMIZED BUILD) Starting local ZIP compression stream for:', archiveName);
 
     const compressor = new StreamCompressor({
       maxInFlight: this.options.maxInFlight,

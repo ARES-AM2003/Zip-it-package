@@ -63,6 +63,7 @@ export type WorkerOutMessage =
   | WorkerMetadataUpdate;
 
 // ─── Worker state ──────────────────────────────────────────────────────────────
+let isWatchdogAbort = false;
 const activeTasks = new Map<string, { abortController: AbortController }>();
 
 self.onmessage = async (event: MessageEvent<WorkerInMessage>) => {
@@ -72,6 +73,7 @@ self.onmessage = async (event: MessageEvent<WorkerInMessage>) => {
     const { id, url, startByte } = msg;
     if (activeTasks.has(id)) return;
 
+    isWatchdogAbort = false;
     const abortController = new AbortController();
     activeTasks.set(id, { abortController });
 
@@ -79,13 +81,14 @@ self.onmessage = async (event: MessageEvent<WorkerInMessage>) => {
       await processDownload(id, url, startByte, abortController.signal);
     } catch (err: unknown) {
       const e = err as Error;
-      if (e.name === 'AbortError' || abortController.signal.aborted) {
+      if ((e.name === 'AbortError' || abortController.signal.aborted) && !isWatchdogAbort) {
         self.postMessage({ type: 'paused', id } satisfies WorkerPaused);
       } else {
+        const errorMsg = isWatchdogAbort ? 'Download timed out (connection lost)' : (e.message || String(e));
         self.postMessage({
           type: 'error',
           id,
-          error: e.message || String(e),
+          error: errorMsg,
         } satisfies WorkerError);
       }
     } finally {
@@ -107,9 +110,22 @@ async function processDownload(
   // @ts-ignore — createSyncAccessHandle is available in workers
   const accessHandle = await fileHandle.createSyncAccessHandle();
 
+  const WATCHDOG_TIMEOUT_MS = 25000; // 25 seconds of silence
+  let lastChunkTime = Date.now();
+  let watchdogTimer: any = null;
+
   try {
     const headers = new Headers();
     if (startByte > 0) headers.set('Range', `bytes=${startByte}-`);
+
+    // Start connection watchdog
+    watchdogTimer = setInterval(() => {
+      if (Date.now() - lastChunkTime > WATCHDOG_TIMEOUT_MS) {
+        console.warn(`[DownloadWorker] Watchdog timed out downloading ${url} (no data for ${WATCHDOG_TIMEOUT_MS}ms). Aborting.`);
+        isWatchdogAbort = true;
+        activeTasks.get(id)?.abortController.abort();
+      }
+    }, 5000);
 
     let response = await fetchWithFallback(url, headers, signal);
 
@@ -135,6 +151,9 @@ async function processDownload(
       const { done, value } = await reader.read();
       if (done) break;
       if (signal.aborted) throw new DOMException('Aborted', 'AbortError');
+
+      // Update chunk timestamp on activity
+      lastChunkTime = Date.now();
 
       // @ts-ignore — write options available in workers
       accessHandle.write(value, { at: currentByte });
@@ -163,6 +182,7 @@ async function processDownload(
 
     self.postMessage({ type: 'completed', id } satisfies WorkerCompleted);
   } finally {
+    if (watchdogTimer) clearInterval(watchdogTimer);
     accessHandle.close();
   }
 }
