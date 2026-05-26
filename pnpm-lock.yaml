@@ -21,8 +21,8 @@ importers:
   apps/web:
     dependencies:
       '@blueneon/zip-it':
-        specifier: workspace:*
-        version: link:../../packages/core
+        specifier: ^2.0.0
+        version: 2.0.0(fflate@0.8.2)
       fflate:
         specifier: ^0.8.2
         version: 0.8.2
@@ -77,8 +77,8 @@ importers:
         version: 0.8.2
     devDependencies:
       '@blueneon/zip-it':
-        specifier: workspace:*
-        version: link:../core
+        specifier: ^2.0.0
+        version: 2.0.0(fflate@0.8.2)
       '@testing-library/react':
         specifier: ^15.0.0
         version: 15.0.7(@types/react@18.3.28)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
@@ -140,6 +140,11 @@ packages:
 
   '@bcoe/v8-coverage@0.2.3':
     resolution: {integrity: sha512-0hYQ8SB4Db5zvZB4axdMHGwEaQjkZzFjQiN9LVYvIFB2nSUHW9tYpxWriPrWDASIxiaXax83REcLxuSdnGPZtw==}
+
+  '@blueneon/zip-it@2.0.0':
+    resolution: {integrity: sha512-aGiTNtNU6QfGYaj/FPDjIfxB5u7nmF30G16S4tC90Xf4kebzwv+YVtwXvYFnEtoRVca51kX4fA/DjMs8fGINVQ==}
+    peerDependencies:
+      fflate: ^0.8.0
 
   '@changesets/apply-release-plan@7.1.1':
     resolution: {integrity: sha512-9qPCm/rLx/xoOFXIHGB229+4GOL76S4MC+7tyOuTsR6+1jYlfFDQORdvwR5hDA6y4FL2BPt3qpbcQIS+dW85LA==}
@@ -1544,6 +1549,10 @@ snapshots:
       '@babel/helper-validator-identifier': 7.28.5
 
   '@bcoe/v8-coverage@0.2.3': {}
+
+  '@blueneon/zip-it@2.0.0(fflate@0.8.2)':
+    dependencies:
+      fflate: 0.8.2
 
   '@changesets/apply-release-plan@7.1.1':
     dependencies:
