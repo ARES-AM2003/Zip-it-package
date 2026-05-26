@@ -3,7 +3,7 @@
   "version": "2.0.0",
   "description": "High-performance client-side ZIP streaming and resumable batch download engine",
   "license": "MIT",
-  "author": "Prashant Khatiwada",
+  "author": "Blueneon",
   "keywords": [
     "download",
     "zip",

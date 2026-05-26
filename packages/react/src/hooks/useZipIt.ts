@@ -6,7 +6,7 @@
  *
  * @example
  * ```tsx
- * import { useZipIt } from '@khatiwadaprashant/zipit-react';
+ * import { useZipIt } from '@blueneon/zipit-react';
  *
  * function MyDownloader({ urls }: { urls: string[] }) {
  *   const { progress, start, pause, resume, zip, files } = useZipIt({

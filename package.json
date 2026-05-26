@@ -3,16 +3,20 @@
   "version": "2.0.0",
   "private": true,
   "description": "ZipIt — Client-side ZIP streaming & batch download library",
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
   "scripts": {
     "dev": "yarn --cwd apps/web run dev",
-    "dev:docs": "pnpm --filter @blueneon/zipit-docs dev",
-    "build": "pnpm -r --filter '@blueneon/zip-it' --filter '@blueneon/zipit-react' build",
-    "build:all": "pnpm -r build",
-    "test": "pnpm -r test",
-    "test:coverage": "pnpm -r test:coverage",
-    "lint": "pnpm -r lint",
-    "typecheck": "pnpm -r typecheck",
-    "release": "pnpm -r --filter '@blueneon/zip-it' --filter '@blueneon/zipit-react' publish --access public"
+    "dev:docs": "npm run dev --workspace @blueneon/zipit-docs",
+    "build": "npm run build --workspace @blueneon/zip-it && npm run build --workspace @blueneon/zipit-react",
+    "build:all": "npm run build --workspaces --if-present",
+    "test": "npm run test --workspaces --if-present",
+    "test:coverage": "npm run test:coverage --workspaces --if-present",
+    "lint": "npm run lint --workspaces --if-present",
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "release": "npm publish --workspace @blueneon/zip-it --access public && npm publish --workspace @blueneon/zipit-react --access public"
   },
   "devDependencies": {
     "typescript": "^5.4.0",

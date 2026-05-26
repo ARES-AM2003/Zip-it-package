@@ -6,7 +6,7 @@
  *
  * @example
  * ```tsx
- * import { useZip } from '@khatiwadaprashant/zipit-react';
+ * import { useZip } from '@blueneon/zipit-react';
  *
  * function ZipButton({ urls }: { urls: string[] }) {
  *   const { zip, isZipping, progress } = useZip();

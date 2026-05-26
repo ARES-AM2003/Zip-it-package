@@ -47,11 +47,11 @@ await ds.zip('my-photos.zip'); // ← Streams to disk. No RAM spike. No server.
 
 ### React
 ```bash
-npm install @khatiwadaprashant/zipit-react @blueneon/zip-it fflate
+npm install @blueneon/zipit-react @blueneon/zip-it fflate
 ```
 
 ```tsx
-import { useZipIt } from '@khatiwadaprashant/zipit-react';
+import { useZipIt } from '@blueneon/zipit-react';
 
 function Gallery({ urls }) {
   const { add, start, zip, progress, files } = useZipIt({ concurrency: 4 });
@@ -236,4 +236,4 @@ PRs welcome! Please follow [Conventional Commits](https://www.conventionalcommit
 
 ## License
 
-MIT © Prashant Khatiwada
+MIT © Blueneon
