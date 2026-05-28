@@ -1,6 +1,6 @@
 {
   "name": "zipit-monorepo",
-  "version": "2.0.0",
+  "version": "2.0.2",
   "private": true,
   "description": "ZipIt — Client-side ZIP streaming & batch download library",
   "workspaces": [
@@ -16,7 +16,7 @@
     "test:coverage": "npm run test:coverage --workspaces --if-present",
     "lint": "npm run lint --workspaces --if-present",
     "typecheck": "npm run typecheck --workspaces --if-present",
-    "release": "npm publish --workspace @blueneon/zip-it --access public && npm publish --workspace @blueneon/zipit-react --access public"
+    "release": "node ./scripts/release.mjs"
   },
   "devDependencies": {
     "typescript": "^5.4.0",

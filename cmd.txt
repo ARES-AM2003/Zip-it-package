@@ -1,0 +1,21 @@
+# Run once to install workspace deps
+npm install
+
+# Build both packages
+npm run build
+
+# Optional: dry-run package contents (verifies what will be published)
+npm pack --workspace @blueneon/zip-it --dry-run
+npm pack --workspace @blueneon/zipit-react --dry-run
+
+# Authenticate with npm (run interactively)
+npm login
+
+# Publish both packages with one command after logging in once
+npm run release -- 2.0.2
+
+# If the React package needs a different version, pass it explicitly
+# npm run release -- 2.0.2 --react-version 0.1.2
+
+# One-liner release still requires npm login beforehand
+# npm install && npm login && npm run release -- 2.0.2

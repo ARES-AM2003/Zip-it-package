@@ -55,8 +55,10 @@
   integrity sha512-0hYQ8SB4Db5zvZB4axdMHGwEaQjkZzFjQiN9LVYvIFB2nSUHW9tYpxWriPrWDASIxiaXax83REcLxuSdnGPZtw==
 
 "@blueneon/zip-it@^2.0.0", "@blueneon/zip-it@file:/home/ares/Projects/BNT/Fotosfolio/Zip-it-package/packages/core":
-  version "2.0.0"
+  version "2.0.1"
   resolved "file:packages/core"
+  dependencies:
+    "@zip.js/zip.js" "^2.8.26"
 
 "@blueneon/zipit-react@file:/home/ares/Projects/BNT/Fotosfolio/Zip-it-package/packages/react":
   version "0.1.1"
@@ -672,6 +674,11 @@
   version "3.5.34"
   resolved "https://registry.npmjs.org/@vue/shared/-/shared-3.5.34.tgz"
   integrity sha512-24uqU4OIiX29ryC3MeWid/Xf2fa2EFRUVLb77nRhk+UrTVrh/XiGtFAFmJBAtBRbjwNdsPRP+jj/OL27Eg1NDA==
+
+"@zip.js/zip.js@^2.8.26":
+  version "2.8.26"
+  resolved "https://registry.npmjs.org/@zip.js/zip.js/-/zip.js-2.8.26.tgz"
+  integrity sha512-RQ4h9F6DOiHxpdocUDrOl6xBM+yOtz+LkUol47AVWcfebGBDpZ7w7Xvz9PS24JgXvLGiXXzSAfdCdVy1tPlaFA==
 
 acorn-walk@^8.3.2:
   version "8.3.5"

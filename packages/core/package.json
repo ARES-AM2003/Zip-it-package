@@ -1,6 +1,6 @@
 {
   "name": "@blueneon/zip-it",
-  "version": "2.0.0",
+  "version": "2.0.2",
   "description": "High-performance client-side ZIP streaming and resumable batch download engine",
   "license": "MIT",
   "author": "Blueneon",
@@ -69,7 +69,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/ARES-AM2003/Zip-it-package"
+    "url": "git+https://github.com/ARES-AM2003/Zip-it-package.git"
   },
   "homepage": "https://zipit.dev"
 }

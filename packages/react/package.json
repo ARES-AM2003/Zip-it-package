@@ -1,10 +1,17 @@
 {
   "name": "@blueneon/zipit-react",
-  "version": "0.1.1",
+  "version": "2.0.2",
   "description": "React hooks for @blueneon/zip-it — useZipIt, useZip",
   "license": "MIT",
   "author": "Blueneon",
-  "keywords": ["zipit", "react", "hooks", "download", "zip", "streaming"],
+  "keywords": [
+    "zipit",
+    "react",
+    "hooks",
+    "download",
+    "zip",
+    "streaming"
+  ],
   "sideEffects": false,
   "type": "module",
   "exports": {
@@ -16,7 +23,10 @@
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
-  "files": ["dist", "README.md"],
+  "files": [
+    "dist",
+    "README.md"
+  ],
   "scripts": {
     "dev": "vite build --watch",
     "build": "tsc --noEmit && vite build",
@@ -25,13 +35,13 @@
     "typecheck": "tsc --noEmit"
   },
   "peerDependencies": {
-    "@blueneon/zip-it": "^2.0.0",
+    "@blueneon/zip-it": "^2.0.2",
     "fflate": "^0.8.0",
     "react": ">=16.8.0"
   },
   "devDependencies": {
     "@types/react": "^18.0.0",
-    "@blueneon/zip-it": "^2.0.0",
+    "@blueneon/zip-it": "^2.0.2",
     "react": "^18.0.0",
     "vite": "^5.0.0",
     "vite-plugin-dts": "^3.8.0",
