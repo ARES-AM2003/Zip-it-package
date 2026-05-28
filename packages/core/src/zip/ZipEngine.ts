@@ -7,7 +7,7 @@
  * @internal
  */
 
-import { StreamCompressor } from './StreamCompressor';
+import * as zip from '@zip.js/zip.js';
 
 export interface ZipRequest {
   url: string;
@@ -60,14 +60,11 @@ async function triggerStreamDownload(
 }
 
 export class ZipEngine {
-  private options: Required<ZipEngineOptions>;
   private _isBusy = false;
 
-  constructor(options: ZipEngineOptions = {}) {
-    this.options = {
-      maxInFlight: options.maxInFlight ?? 10,
-      streamBufferBytes: options.streamBufferBytes ?? 5 * 1024 * 1024,
-    };
+  constructor(_options: ZipEngineOptions = {}) {
+    // Native stream-based backpressure handles pacing automatically
+    console.log('[ZipIt] (LOCAL OPTIMIZED BUILD) ZipEngine initialized successfully.');
   }
 
   get isBusy(): boolean {
@@ -102,17 +99,19 @@ export class ZipEngine {
     }
 
     this._isBusy = true;
-    console.log('[ZipIt] (LOCAL OPTIMIZED BUILD) Starting local ZIP compression stream for:', archiveName);
+    console.log('[ZipIt] (LOCAL OPTIMIZED BUILD) Starting local ZIP64 compression stream for:', archiveName);
 
-    const compressor = new StreamCompressor({
-      maxInFlight: this.options.maxInFlight,
-      streamBufferBytes: this.options.streamBufferBytes,
-    });
-    const zipStream = compressor.getStream();
+    // Disable web workers globally to avoid complex bundler worker path configuration.
+    // Since level: 0 (STORE method) is used, there is virtually no CPU overhead, making Web Workers unnecessary.
+    zip.configure({ useWebWorkers: false });
+
+    // TransformStream bridges the ZIP writer to the download trigger
+    const { readable, writable } = new TransformStream<Uint8Array, Uint8Array>();
+    const zipWriter = new zip.ZipWriter(writable, { zip64: true });
 
     // Trigger the OS download FIRST so the browser shows progress immediately
     let isAborted = false;
-    const downloadPromise = triggerStreamDownload(archiveName, zipStream).catch(
+    const downloadPromise = triggerStreamDownload(archiveName, readable).catch(
       (err: unknown) => {
         const e = err as Error;
         isAborted = true;
@@ -184,10 +183,13 @@ export class ZipEngine {
         }
         usedNames.add(finalName);
 
-        await compressor.addFileStream(finalName, stream);
+        // Add file to ZIPWriter. level: 0 specifies STORE (no compression),
+        // which is ideal for pre-compressed images/videos and keeps CPU overhead near-zero.
+        await zipWriter.add(finalName, stream, { level: 0 });
       }
 
-      compressor.end();
+      await zipWriter.close();
+
       if (onProgress) {
         console.log('[ZipIt] Zipping loop finished, reporting 100%');
         onProgress({

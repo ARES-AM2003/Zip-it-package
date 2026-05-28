@@ -45,6 +45,9 @@
     "typecheck": "tsc --noEmit",
     "lint": "tsc --noEmit"
   },
+  "dependencies": {
+    "@zip.js/zip.js": "^2.8.26"
+  },
   "devDependencies": {
     "@types/node": "^20.0.0",
     "@types/streamsaver": "^2.0.5",
@@ -61,7 +64,7 @@
   },
   "peerDependenciesMeta": {
     "fflate": {
-      "optional": false
+      "optional": true
     }
   },
   "repository": {
