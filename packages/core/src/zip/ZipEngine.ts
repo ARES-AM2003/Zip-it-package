@@ -31,7 +31,7 @@ async function triggerStreamDownload(
   fileName: string,
   stream: ReadableStream<Uint8Array>
 ): Promise<void> {
-  // Prefer native File System Access API save dialog
+  // Prefer native File System Access API save dialog (Tier 1)
   if ('showSaveFilePicker' in window) {
     try {
       const handle = await (window as Window & { showSaveFilePicker: (opts: unknown) => Promise<FileSystemFileHandle> })
@@ -45,15 +45,132 @@ async function triggerStreamDownload(
     } catch (err: unknown) {
       const e = err as Error;
       if (e.name !== 'AbortError') {
-        // Fall through to streamsaver
-        console.warn('[ZipIt] showSaveFilePicker failed, falling back to streamsaver:', e.message);
+        // Fall through to OPFS fallback
+        console.warn('[ZipIt] showSaveFilePicker failed, falling back to OPFS:', e.message);
       } else {
         throw e; // User cancelled
       }
     }
   }
 
-  // Fallback: streamsaver.js (Service Worker based)
+  // Fallback: OPFS Sandboxed Streaming + Native Browser Download (Tier 2)
+  if (supportsOPFS()) {
+    try {
+      console.log('[ZipIt] OPFS streaming fallback starting...');
+      const rootDir = await navigator.storage.getDirectory();
+      const tempFileId = `temp_zip_${Date.now()}.zip`;
+
+      // Setup Web Worker for synchronous writing to avoid main-thread hangs/blocking
+      const workerBlob = new Blob([`
+        let accessHandle = null;
+        self.onmessage = async (e) => {
+          const { type, fileId, chunk, at } = e.data;
+          if (type === 'init') {
+            try {
+              const root = await navigator.storage.getDirectory();
+              const handle = await root.getFileHandle(fileId, { create: true });
+              accessHandle = await handle.createSyncAccessHandle();
+              self.postMessage({ type: 'initialized' });
+            } catch (err) {
+              self.postMessage({ type: 'error', error: err.message });
+            }
+          } else if (type === 'write') {
+            try {
+              accessHandle.write(chunk, { at });
+              self.postMessage({ type: 'written' });
+            } catch (err) {
+              self.postMessage({ type: 'error', error: err.message });
+            }
+          } else if (type === 'close') {
+            try {
+              if (accessHandle) {
+                if (typeof accessHandle.flush === 'function') accessHandle.flush();
+                accessHandle.close();
+              }
+              self.postMessage({ type: 'closed' });
+            } catch (err) {
+              self.postMessage({ type: 'error', error: err.message });
+            }
+          }
+        };
+      `], { type: 'application/javascript' });
+
+      const workerUrl = URL.createObjectURL(workerBlob);
+      const worker = new Worker(workerUrl);
+
+      // Wait for initialization
+      await new Promise<void>((resolve, reject) => {
+        worker.onmessage = (e) => {
+          if (e.data.type === 'initialized') resolve();
+          else if (e.data.type === 'error') reject(new Error(e.data.error));
+        };
+        worker.postMessage({ type: 'init', fileId: tempFileId });
+      });
+
+      let currentOffset = 0;
+      const opfsWritable = new WritableStream<Uint8Array>({
+        write(chunk) {
+          return new Promise<void>((resolve, reject) => {
+            worker.onmessage = (e) => {
+              if (e.data.type === 'written') resolve();
+              else if (e.data.type === 'error') reject(new Error(e.data.error));
+            };
+            // Transfer the buffer for optimal performance (no copy)
+            const buffer = chunk.buffer.slice(chunk.byteOffset, chunk.byteOffset + chunk.byteLength);
+            worker.postMessage(
+              { type: 'write', chunk: new Uint8Array(buffer), at: currentOffset },
+              [buffer]
+            );
+            currentOffset += chunk.byteLength;
+          });
+        },
+        close() {
+          return new Promise<void>((resolve, reject) => {
+            worker.onmessage = (e) => {
+              if (e.data.type === 'closed') resolve();
+              else if (e.data.type === 'error') reject(new Error(e.data.error));
+            };
+            worker.postMessage({ type: 'close' });
+          });
+        },
+        abort(err) {
+          worker.terminate();
+          URL.revokeObjectURL(workerUrl);
+          throw err;
+        }
+      });
+
+      await stream.pipeTo(opfsWritable);
+      worker.terminate();
+      URL.revokeObjectURL(workerUrl);
+
+      // Trigger native download via createObjectURL
+      console.log('[ZipIt] OPFS zipping complete. Triggering native download...');
+      const fileHandle = await rootDir.getFileHandle(tempFileId);
+      const file = await fileHandle.getFile();
+      const blobURL = URL.createObjectURL(file);
+
+      const tempLink = document.createElement('a');
+      tempLink.style.display = 'none';
+      tempLink.href = blobURL;
+      tempLink.setAttribute('download', fileName);
+      document.body.appendChild(tempLink);
+      tempLink.click();
+
+      // Cleanup DOM node immediately, revoke URL after delay to allow browser to start download
+      document.body.removeChild(tempLink);
+      setTimeout(() => {
+        URL.revokeObjectURL(blobURL);
+      }, 30000);
+
+      return;
+    } catch (err: unknown) {
+      console.error('[ZipIt] OPFS streaming fallback failed, trying streamsaver:', err);
+      // Fall through to streamsaver
+    }
+  }
+
+  // Fallback: streamsaver.js (Service Worker based) (Tier 3)
   const streamSaver = await import('streamsaver');
   const fileStream = streamSaver.default.createWriteStream(fileName);
   await stream.pipeTo(fileStream);
@@ -100,6 +217,25 @@ export class ZipEngine {
 
     this._isBusy = true;
     console.log('[ZipIt] (LOCAL OPTIMIZED BUILD) Starting local ZIP64 compression stream for:', archiveName);
+
+    // Clean up any old temp files from previous aborted sessions (non-blocking)
+    if (supportsOPFS()) {
+      navigator.storage.getDirectory().then(async (root) => {
+        try {
+          if (typeof (root as any)[Symbol.asyncIterator] === 'function') {
+            for await (const [name] of (root as unknown as AsyncIterable<[string, FileSystemHandle]>)) {
+              if (name.startsWith('temp_zip_')) {
+                await root.removeEntry(name).catch(() => {});
+              }
+            }
+          }
+        } catch (err) {
+          console.warn('[ZipIt] Failed to run OPFS temp files cleanup:', err);
+        }
+      }).catch((err) => {
+        console.warn('[ZipIt] Failed to access OPFS for cleanup:', err);
+      });
+    }
 
     // Disable web workers globally to avoid complex bundler worker path configuration.
     // Since level: 0 (STORE method) is used, there is virtually no CPU overhead, making Web Workers unnecessary.

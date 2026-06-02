@@ -54,17 +54,17 @@
   resolved "https://registry.npmjs.org/@bcoe/v8-coverage/-/v8-coverage-0.2.3.tgz"
   integrity sha512-0hYQ8SB4Db5zvZB4axdMHGwEaQjkZzFjQiN9LVYvIFB2nSUHW9tYpxWriPrWDASIxiaXax83REcLxuSdnGPZtw==
 
-"@blueneon/zip-it@^2.0.0", "@blueneon/zip-it@file:/home/ares/Projects/BNT/Fotosfolio/Zip-it-package/packages/core":
-  version "2.0.1"
+"@blueneon/zip-it@^2.0.2", "@blueneon/zip-it@file:/home/slayer/BlueNeon/zip/Massive-Downloader/packages/core":
+  version "2.0.2"
   resolved "file:packages/core"
   dependencies:
     "@zip.js/zip.js" "^2.8.26"
 
-"@blueneon/zipit-react@file:/home/ares/Projects/BNT/Fotosfolio/Zip-it-package/packages/react":
-  version "0.1.1"
+"@blueneon/zipit-react@file:/home/slayer/BlueNeon/zip/Massive-Downloader/packages/react":
+  version "2.0.2"
   resolved "file:packages/react"
 
-"@blueneon/zipit-web@file:/home/ares/Projects/BNT/Fotosfolio/Zip-it-package/apps/web":
+"@blueneon/zipit-web@file:/home/slayer/BlueNeon/zip/Massive-Downloader/apps/web":
   version "0.1.0"
   resolved "file:apps/web"
   dependencies:
